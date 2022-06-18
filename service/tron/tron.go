@@ -2,20 +2,10 @@ package tron
 
 import (
 	"encoding/json"
+	"gohash/config"
 	"gohash/utils/curl"
+	"gohash/utils/log"
 	string2 "gohash/utils/string"
-	"log"
-)
-
-const (
-	TransferURL             = "http://3.225.171.164:8090/wallet/easytransferbyprivate"
-	CreateTransactionURL    = "http://3.225.171.164:8090/wallet/createtransaction"
-	GetTransactionSignURL   = "http://3.225.171.164:8090/wallet/gettransactionsign"
-	BroadCastTransactionURL = "http://3.225.171.164:8090/wallet/broadcasttransaction"
-	PrivateKey              = "d8489f67f90bad8695aa385a9106d45174ae63842ab17ad0b3bdd548d1266c75"
-	OwnerAddress            = "41fa27c59b08b08a1e7729a209dd1601b8b8990a33"
-	ToAddress               = "41ec74ed234e91c13e2b1efd5dcd4af91434e7305c"
-	APIKey                  = "3d89eda8-7359-43fe-a144-e6f8e7dca8c7"
 )
 
 type Payload struct {
@@ -30,52 +20,54 @@ func CreateTransaction(p Payload) (trans Transaction, err error) {
 		"Content-Type": "application/json",
 	}
 	jsonBytes, _ := json.Marshal(p)
-	body, _ := curl.PostJsonWithHeader(CreateTransactionURL, jsonBytes, headers)
+	body, _ := curl.PostJsonWithHeader(config.TronCreateTransactionURL, jsonBytes, headers)
 	string2.LogJson("body: ", string(body))
 	if err = json.Unmarshal(body, &trans); err != nil {
+		log.Sugar.Error(err)
 		return
 	}
 	return trans, err
 }
 
-func getTransactionSign(transaction Transaction, privateKey string) (trans TransactionWithSign, err error) {
+func getTransactionSign(transaction Transaction) (trans TransactionWithSign, err error) {
 	payload := struct {
 		Transaction Transaction `json:"transaction"`
 		PrivateKey  string      `json:"privateKey"`
 	}{
 		Transaction: transaction,
-		PrivateKey:  privateKey,
+		PrivateKey:  config.TronPrivateKey,
 	}
 	string2.LogJson("sign payload: ", payload)
 	signByte, err := json.Marshal(payload)
 	if err != nil {
 		return
 	}
-	bodyByte, err := curl.PostJson(GetTransactionSignURL, signByte)
+	bodyByte, err := curl.PostJson(config.TronTransactionSignURL, signByte)
 	string2.LogJson("bodyByte: ", string(bodyByte))
 	if err != nil {
-		log.Println("curl transaction sign err: ", err)
+		log.Sugar.Error(err)
 		return
 	}
 	err = json.Unmarshal(bodyByte, &trans)
 	return
 }
 
-func BroadcastTransaction(transaction Transaction, priKey string) (b Broadcast, err error) {
-	trans, err := getTransactionSign(transaction, priKey)
+func BroadcastTransaction(transaction Transaction) (b Broadcast, err error) {
+	trans, err := getTransactionSign(transaction)
 	string2.LogJson("trans sign: ", trans)
 	if err != nil {
-		log.Println("getTransactionSign err: ", err)
+		log.Sugar.Error(err)
 		return
 	}
 	transByte, err := json.Marshal(trans)
 	if err != nil {
+		log.Sugar.Error(err)
 		return
 	}
-	bodyByte, err := curl.PostJson(BroadCastTransactionURL, transByte)
+	bodyByte, err := curl.PostJson(config.TronBroadcastTransactionURL, transByte)
 	string2.LogJson("broadcast error: ", string(bodyByte))
 	if err != nil {
-		log.Println("broadcast transaction failed", err)
+		log.Sugar.Error(err)
 		return
 	}
 	err = json.Unmarshal(bodyByte, &b)

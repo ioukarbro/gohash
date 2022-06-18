@@ -10,24 +10,29 @@ import (
 )
 
 var (
-	AppDebug            bool
-	MysqlDns            string
-	BotToken            string
-	BotUsername         string
-	AppName             string
-	HashKey             string
-	BotGameGroupID      int64
-	BotServiceGroupID   int64
-	RedisHost           string
-	RedisPort           string
-	RedisDB             int
-	ChannelPrefix       string
+	AppDebug          bool
+	MysqlDns          string
+	BotToken          string
+	BotUsername       string
+	AppName           string
+	HashKey           string
+	BotGameGroupID    int64
+	BotServiceGroupID int64
+	RedisHost         string
+	RedisPort         string
+	RedisDB           int
+	ChannelPrefix     string
+
 	TronPrivateKey      string
 	TronOwnerAddress    string
 	TronOwnerAddressHex string
 	TronToAddress       string
 	TronToAddressHex    string
 	TronApiKey          string
+
+	TronCreateTransactionURL    string
+	TronTransactionSignURL      string
+	TronBroadcastTransactionURL string
 )
 
 func Load() {
@@ -86,4 +91,7 @@ func parseTronConfig() {
 	if err != nil {
 		panic("生成TRON接收地址失败" + err.Error())
 	}
+	TronCreateTransactionURL = viper.GetString("TRON_CREATE_TRANSACTION_URL")
+	TronTransactionSignURL = viper.GetString("TRON_GET_TRANSACTION_SIGN_URL")
+	TronBroadcastTransactionURL = viper.GetString("TRON_BROADCAST_TRANSACTION_URL")
 }
