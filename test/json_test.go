@@ -18,5 +18,5 @@ func TestJson(T *testing.T) {
 	var t tron.Transaction
 	err = json.Unmarshal(b, &t)
 	fmt.Println(err)
-	string2.PrintJson("json", t)
+	string2.LogJson("json", t)
 }

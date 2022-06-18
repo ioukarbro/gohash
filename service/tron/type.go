@@ -33,7 +33,7 @@ type Transaction struct {
 
 type TransactionWithSign struct {
 	Transaction
-	Signature []string
+	Signature []string `json:"signature"`
 }
 
 type Broadcast struct {
@@ -42,11 +42,11 @@ type Broadcast struct {
 }
 
 type TransResult struct {
-	Total        int64       `json:"total"`
-	Data         ResultData  `json:"data"`
-	ContractMap  interface{} `json:"contractMap"`
-	RangeTotal   int64       `json:"rangeTotal"`
-	ContractInfo interface{} `json:"contractInfo"`
+	Total        int64        `json:"total"`
+	Data         []ResultData `json:"data"`
+	ContractMap  interface{}  `json:"contractMap"`
+	RangeTotal   int64        `json:"rangeTotal"`
+	ContractInfo interface{}  `json:"contractInfo"`
 }
 
 type ResultData struct {

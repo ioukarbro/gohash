@@ -2,14 +2,20 @@ package string
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"regexp"
 	"strings"
 )
 
-func PrintJson(title string, v interface{}) {
+func LogJson(title string, v interface{}) {
 	m, _ := json.Marshal(v)
 	log.Println(title, string(m))
+}
+
+func PrintJson(title string, v interface{}) {
+	m, _ := json.Marshal(v)
+	fmt.Println(title, string(m))
 }
 
 func FilterName(username string) string {

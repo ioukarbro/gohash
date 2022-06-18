@@ -3,6 +3,8 @@ package tron
 import (
 	"encoding/json"
 	"gohash/utils/curl"
+	string2 "gohash/utils/string"
+	"log"
 )
 
 const (
@@ -22,43 +24,48 @@ type Payload struct {
 	Amount       int64  `json:"amount"`
 }
 
-func CreateTransaction(p Payload) (TxID string, err error) {
+func CreateTransaction(p Payload) (trans Transaction, err error) {
 	var headers = map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/json",
 	}
 	jsonBytes, _ := json.Marshal(p)
 	body, _ := curl.PostJsonWithHeader(CreateTransactionURL, jsonBytes, headers)
-	var trans Transaction
+	string2.LogJson("body: ", string(body))
 	if err = json.Unmarshal(body, &trans); err != nil {
 		return
 	}
-	return trans.TxID, err
+	return trans, err
 }
 
 func getTransactionSign(transaction Transaction, privateKey string) (trans TransactionWithSign, err error) {
 	payload := struct {
-		Transaction Transaction
-		PrivateKey  string
+		Transaction Transaction `json:"transaction"`
+		PrivateKey  string      `json:"privateKey"`
 	}{
 		Transaction: transaction,
 		PrivateKey:  privateKey,
 	}
-	payloadByte, err := json.Marshal(payload)
+	string2.LogJson("sign payload: ", payload)
+	signByte, err := json.Marshal(payload)
 	if err != nil {
 		return
 	}
-	bodyByte, err := curl.PostJson(GetTransactionSignURL, payloadByte)
+	bodyByte, err := curl.PostJson(GetTransactionSignURL, signByte)
+	string2.LogJson("bodyByte: ", string(bodyByte))
 	if err != nil {
+		log.Println("curl transaction sign err: ", err)
 		return
 	}
 	err = json.Unmarshal(bodyByte, &trans)
 	return
 }
 
-func BroadcastTransaction(transaction Transaction) (b Broadcast, err error) {
-	trans, err := getTransactionSign(transaction, PrivateKey)
+func BroadcastTransaction(transaction Transaction, priKey string) (b Broadcast, err error) {
+	trans, err := getTransactionSign(transaction, priKey)
+	string2.LogJson("trans sign: ", trans)
 	if err != nil {
+		log.Println("getTransactionSign err: ", err)
 		return
 	}
 	transByte, err := json.Marshal(trans)
@@ -66,7 +73,9 @@ func BroadcastTransaction(transaction Transaction) (b Broadcast, err error) {
 		return
 	}
 	bodyByte, err := curl.PostJson(BroadCastTransactionURL, transByte)
+	string2.LogJson("broadcast error: ", string(bodyByte))
 	if err != nil {
+		log.Println("broadcast transaction failed", err)
 		return
 	}
 	err = json.Unmarshal(bodyByte, &b)
@@ -74,12 +83,21 @@ func BroadcastTransaction(transaction Transaction) (b Broadcast, err error) {
 }
 
 // QueryTransaction 查询交易
-func QueryTransaction(address string) (result ResultData, err error) {
+func QueryTransaction(address string, transactionHash string) (resData ResultData, err error) {
 	url := "https://apilist.tronscan.org/api/transfer?limit=20&start=0&sort=-timestamp&count=true&address=" + address
+	var result TransResult
+	println(url)
 	body, err := curl.Get(url)
 	if err != nil {
 		return
 	}
-	err = json.Unmarshal(body, &result)
+	if err = json.Unmarshal(body, &result); err != nil {
+		return
+	}
+	for _, v := range result.Data {
+		if v.TransactionHash == transactionHash {
+			return v, err
+		}
+	}
 	return
 }
