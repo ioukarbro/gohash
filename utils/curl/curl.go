@@ -34,13 +34,13 @@ func PostForm(formValues map[string]string, url string) (body map[string]interfa
 	return
 }
 
-func PostJson(url string, jsonStr string) (body []byte, err error) {
-	return PostJsonWithHeader(url, jsonStr, map[string]string{"Content-Type": "application/json"})
+func PostJson(url string, jsonByte []byte) (body []byte, err error) {
+	return PostJsonWithHeader(url, jsonByte, map[string]string{"Content-Type": "application/json"})
 }
 
-func PostJsonWithHeader(url string, jsonStr string, headers map[string]string) (body []byte, err error) {
+func PostJsonWithHeader(url string, jsonBytes []byte, headers map[string]string) (body []byte, err error) {
 	var req *http.Request
-	if req, err = http.NewRequest("POST", url, bytes.NewBuffer([]byte(jsonStr))); err != nil {
+	if req, err = http.NewRequest("POST", url, bytes.NewBuffer(jsonBytes)); err != nil {
 		return
 	}
 	for k, header := range headers {
